@@ -1,0 +1,86 @@
+/* Styles généraux */
+*{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root{
+    --elementSize: 4vw;
+}
+body {
+    font-family: 'Arial', sans-serif;
+    margin: 0;
+    overflow: hidden;
+    background-color: #333;
+}
+
+/* Canvas pour le jeu */
+#gameCanvas {
+    display: block;
+    margin: 0 auto;
+    background-color: #111;
+    position: relative;
+}
+
+/* Jauge de score */
+#scoreJauge {
+    position: absolute;
+    right: 10px;
+    top: 10px;
+    width: 40px;
+    height: 400px;
+    background-color: #DDD;
+    border: 3px solid #AAA;
+}
+
+#scoreJauge .luluImage {
+    width: 100%;
+    background: url('images/lulu.png') no-repeat;
+    background-size: contain;
+}
+
+/* Pour le fond et autres éléments graphiques */
+#backgroundCiel {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: url('images/fond_ciel.png') no-repeat;
+    background-size: cover;
+    z-index: -1;
+}
+
+#luneImage {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 5%; /* La lune remplit 5% de l'écran */
+    z-index: -2;
+}
+
+/* Pour d'autres éléments tels que des modales ou des notifications, vous devrez ajouter des styles supplémentaires. */
+#missingLetters {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 40px;
+    height: 10%;
+    background: #050a38;
+    z-index: 2;
+}
+
+#missingLetters span{
+    font-size: 4vw;
+    color: #fff;
+}
+
+.fallingElement{
+    position: absolute;
+    color: white;
+    font-size: var(--elementSize);
+    width: var(--elementSize);
+    text-align: center;
+    user-select: none;
+}
