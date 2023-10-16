@@ -9,7 +9,46 @@
 </head>
 <body>
 <canvas id="gameCanvas"></canvas>
+<div id="settings" class="center panel">
+    <h1>Paramètres</h1>
+    <div>
+        <label for="maxScore">Score maximum</label>
+        <input id="maxScore" name="maxScore"/>
+    </div>
 
+    <fieldset>
+        <legend>Choix de mode de jeu</legend>
+
+        <div>
+            <input id="letters" name="game_choice" type="radio" checked/>
+            <label for="letters">Lettres</label>
+        </div>
+
+        <div>
+            <input id="numbers" name="game_choice" type="radio"/>
+            <label for="numbers">Nombres</label>
+        </div>
+    </fieldset>
+
+    <div>
+        <label for="sound">Son</label>
+        <input id="sound" type="checkbox" checked/>
+    </div>
+
+    <div id="buttonGroup">
+        <button id="cancel" class="button">Annuler</button>
+        <button id="reset" class="button">Réinitialiser</button>
+        <button id="saveGame" class="button">Sauvegarder</button>
+    </div>
+
+</div>
+
+<div id="home" class="center panel">
+    <button id="start" class="button">Lancer</button>
+    <button id="settingsButton" class="button">Paramètres</button>
+</div>
+<img id="moon" src="images/lune.png" alt="Lune">
+<div id="backdrop" style="display: block"></div>
 <div id="missingLetters"></div>
 <script src="script.js"></script>
 </body>

@@ -4,12 +4,103 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const missingLetterContainer = document.getElementById("missingLetters");
+const backdrop = document.getElementById("backdrop");
+const settingsPage = document.getElementById("settings");
+const maxScoreInput = document.getElementById("maxScore");
+const saveButton = document.getElementById("saveGame");
+const settingsButton = document.getElementById("settingsButton");
+const start = document.getElementById("start");
+const cancelButton = document.getElementById("cancel");
+const resetButton = document.getElementById("reset");
+const letterGameType = document.getElementById("letters");
+const numberGameType = document.getElementById("numbers");
+const sound = document.getElementById("sound");
+const homePanel = document.getElementById("home");
 
+let requestID = null;
+let isGameRunning = false;
 let score = 0;
-let isGameRunning = true;
 let elements = [];
 
-const maxScore = 5;
+maxScoreInput.value = localStorage.getItem("maxScore") || 10;
+let maxScore = parseInt(maxScoreInput.value);
+
+let gameType = localStorage.getItem("gameType") || (letterGameType.checked ? "letters" : "numbers");
+letterGameType.checked = gameType === "letters";
+numberGameType.checked = gameType === "numbers";
+
+let hearSound = localStorage.getItem("hearSound") === "true" || false;
+sound.checked = hearSound;
+
+const laughSound = new Audio("sounds/rire.mp3");
+
+saveButton.addEventListener("click", () => {
+    maxScore = parseInt(maxScoreInput.value);
+    gameType = letterGameType.checked ? "letters" : "numbers";
+    hearSound = sound.checked;
+    settingsPage.style.display = "none";
+    // save those settings in local storage
+    localStorage.setItem("maxScore", maxScore);
+    localStorage.setItem("gameType", gameType);
+    localStorage.setItem("hearSound", hearSound);
+    resetGame();
+    // stop the sound
+    laughSound.pause();
+    laughSound.currentTime = 0;
+    isGameRunning = true;
+    requestID && cancelAnimationFrame(requestID);
+    gameLoop();
+});
+
+cancelButton.addEventListener("click", () => {
+    maxScoreInput.value = maxScore;
+    letterGameType.checked = gameType === "letters";
+    numberGameType.checked = gameType === "numbers";
+    sound.checked = hearSound;
+    isGameRunning = true;
+    settingsPage.style.display = "none";
+    gameLoop();
+});
+
+resetButton.addEventListener("click", () => {
+    maxScoreInput.value = 10;
+    letterGameType.checked = true;
+    numberGameType.checked = false;
+    sound.checked = true;
+    settingsPage.style.display = "none";
+
+    localStorage.setItem("maxScore", 10);
+    localStorage.setItem("gameType", "letters");
+    localStorage.setItem("hearSound", true);
+
+    maxScore = 10;
+    gameType = "letters";
+    hearSound = true;
+    isGameRunning = true;
+    requestID && cancelAnimationFrame(requestID);
+    resetGame();
+    gameLoop();
+});
+
+settingsButton.addEventListener("click", () => {
+    isGameRunning = false;
+    settingsPage.style.display = "flex";
+    backdrop.style.display = "block";
+    homePanel.style.display = "none";
+    requestID && cancelAnimationFrame(requestID);
+});
+
+start.addEventListener("click", () => {
+    isGameRunning = true;
+    settingsPage.style.display = "none";
+    homePanel.style.display = "none";
+    requestID && cancelAnimationFrame(requestID);
+    gameLoop();
+});
+
+settingsPage.style.display = "none";
+
+
 const images = {
     smiley: loadImage("images/smiley.gif"),
     lune: loadImage("images/lune.png"),
@@ -21,7 +112,6 @@ function loadImage(src) {
     img.src = src;
     return img;
 }
-const rireSound = new Audio("sounds/rire.mp3");
 
 function createLottieAnimation() {
     const lottie = document.createElement("dotlottie-player");
@@ -61,8 +151,10 @@ class FallingElement {
         this.span.addEventListener("click", (e) => {
             if (!isGameRunning) return;
 
-            if (/[A-Z]/.test(this.span.innerText)) {
-                rireSound.play();
+            if (gameType === "letters" && /[A-Z]/.test(this.span.innerText)
+                || gameType === "numbers" && /[0-9]/.test(this.span.innerText)
+            ) {
+                if (hearSound) laughSound.play();
                 score += 1;
                 this.removeElement();
             } else {
@@ -76,7 +168,9 @@ class FallingElement {
         this.span.style.top = this.y + "px";
         if (this.y > canvas.height) {
             this.removeElement();
-            if (/[A-Z]/.test(this.span.innerText)) {
+            if (gameType === "letters" && /[A-Z]/.test(this.span.innerText)
+                || gameType === "numbers" && /[0-9]/.test(this.span.innerText)
+            ) {
                 this.addMissingLetter();
             }
         }
@@ -112,20 +206,32 @@ function drawJauge() {
     // redraw the fill bar each frame
     //width should be 4% of the canvas width
     const jaugeWidth = canvas.width * 0.04;
+    const height = canvas.height - canvas.height * .1;
     ctx.fillStyle = "#DDD";
-    ctx.fillRect(canvas.width - 40, 0, jaugeWidth, canvas.height);
+    ctx.fillRect(canvas.width - 40, 0, jaugeWidth, height);
 
     // draw the fill bar
     ctx.fillStyle = "#FF0000";
-    ctx.fillRect(canvas.width - 40, canvas.height - (canvas.height * score / maxScore), jaugeWidth, canvas.height * score / maxScore);
+    ctx.fillRect(canvas.width - 40, height - (height * score / maxScore), jaugeWidth, height * score / maxScore);
+
+    // draw the border
+    ctx.strokeStyle = "#000";
+    ctx.lineWidth = 2;
+    ctx.strokeRect(canvas.width - 40, 0, jaugeWidth, height);
+
+    // draw the text on the left of the bar with a white background
+    ctx.fillStyle = "#FFF";
+    const scoreX = canvas.width - 40 - 100;
+    ctx.fillRect(scoreX, 0, 150, 50);
+    ctx.fillStyle = "#000";
+    ctx.font = "30px Arial";
+    ctx.fillText(score + "/" + maxScore, scoreX + 10, 35);
 }
 
 function gameLoop() {
     if (!isGameRunning) return;
-
+    backdrop.style.display = "none";
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(images.fondCiel, 0, 0, canvas.width, canvas.height);
-    ctx.drawImage(images.lune, 0, 0, 200, 200);
 
     if (score >= maxScore) {
         createLottieAnimation();
@@ -147,27 +253,35 @@ function gameLoop() {
     // remove the elements marked for removal
     elements = elements.filter(el => !el.toRemove);
 
-    requestAnimationFrame(gameLoop);
+    requestID = requestAnimationFrame(gameLoop);
+}
+
+function resetGame() {
+    score = 0;
+    elements.forEach(el => el.removeElement());
+    elements = [];
+    missingLetterContainer.innerHTML = "";
+    document.querySelectorAll(".fallingElement").forEach(el => el.remove());
+    document.querySelector("dotlottie-player")?.remove();
 }
 
 Promise.all(Object.values(images)).then(() => {
-    generateRandomElement();
     gameLoop();
 });
 
 document.addEventListener("keydown", (e) => {
     if (e.key === "Enter") {
+        isGameRunning = false;
+        resetGame();
         isGameRunning = true;
-        score = 0;
-        Array.from(document.querySelectorAll(".fallingElement")).forEach(el => el.remove());
-        elements = [];
-        missingLetterContainer.innerHTML = "";
-        document.querySelector("dotlottie-player")?.remove();
+        requestID && cancelAnimationFrame(requestID);
         gameLoop();
     }
 
     if (e.key === "Escape") {
         isGameRunning = !isGameRunning;
+        settingsPage.style.display = isGameRunning ? "none" : "flex";
+        backdrop.style.display = isGameRunning ? "none" : "block";
         gameLoop();
     }
 });
